@@ -3,7 +3,7 @@
 This repo contains reusable GHA workflows that can be used in Rust projects.
 
 Current functionalities:
-- Format
+- Formatting
 - Lint
 - Codecov
 - Dependencies check
