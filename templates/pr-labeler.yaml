@@ -15,8 +15,12 @@ on:
 
 concurrency:
 group: ${{ github.head_ref || github.run_id }}
-  cancel-in-progress: trueß
+  cancel-in-progress: true
 
 jobs:
-  run-rust-ci-workflow:
-    uses: brunolmarques/gha-reusable-workflows/.github.workflows/pr-labeler.yaml@v1.0
+  pr-labeler:
+  runs-on: ubuntu-latest
+
+  steps:
+    - id: label-pr
+      uses: actions/labeler@v4
