@@ -14,8 +14,9 @@ on:
       - '**.md'     
 
 concurrency:
+group: ${{ github.head_ref || github.run_id }}
   cancel-in-progress: trueß
 
 jobs:
   run-rust-ci-workflow:
-    uses: brunolmarques/gha-reusable-workflows/.github.workflows/pr-labeler.yaml@main
+    uses: brunolmarques/gha-reusable-workflows/.github.workflows/pr-labeler.yaml@v1.0
