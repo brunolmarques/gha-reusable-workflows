@@ -2,26 +2,38 @@ name: Rust CI
 
 on:
  workflow_call:
-
+  inputs:
+    protobuf:
+      default: false
+      required: false
+      type: boolean
+      
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
+      - if: ${{ inputs.protobuf }}
+        name: Install protoc
+        uses: arduino/setup-protoc@v1
+
       - name: Checkout code
         uses: actions/checkout@v3
-
-      - name: Set up Rust
-        run: |
-          curl https://sh.rustup.rs -sSf | sh -s -- -y
 
       - name: Cache dependencies
         uses: actions/cache@v3
         with:
-          path: ~/.cargo
+          path: |
+            ~/.cargo
+            target/
           key: cargo-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            cargo-${{ runner.os }}-
+          restore-keys: cargo-${{ runner.os }}-
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
 
       - name: Install Clippy and Rustfmt
         run: |
@@ -36,9 +48,10 @@ jobs:
         run: |
           cargo clippy --all-targets -- -D warnings
 
-      - name: Run tests
+      - name: Build and test code
         run: |
-          cargo test --all
+          cargo build --verbose
+          cargo test --verbose
 
       - name: Analyze security breaches for dependencies
         run: |
