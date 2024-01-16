@@ -2,21 +2,12 @@ name: Rust CI
 
 on:
  workflow_call:
-  inputs:
-    protobuf:
-      default: false
-      required: false
-      type: boolean
       
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - if: ${{ inputs.protobuf }}
-        name: Install protoc
-        uses: arduino/setup-protoc@v1
-
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -33,7 +24,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: nightly
 
       - name: Install Clippy and Rustfmt
         run: |
@@ -47,12 +38,18 @@ jobs:
       - name: Run Clippy
         run: |
           cargo clippy --all-targets -- -D warnings
+      
+      - name: Run cargo-udeps
+        uses: aig787/cargo-udeps-action@v1
+        with:
+          version: 'latest'
+          args: '--all-targets'
+          
+      - name: Analyze security breaches for dependencies
+        run: |
+          cargo audit
 
       - name: Build and test code
         run: |
           cargo build --verbose
           cargo test --verbose
-
-      - name: Analyze security breaches for dependencies
-        run: |
-          cargo audit
