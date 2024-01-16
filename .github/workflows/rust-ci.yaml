@@ -23,7 +23,7 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          profile: minimal
+          override: true
           toolchain: nightly
 
       - name: Install Clippy and Rustfmt
