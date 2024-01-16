@@ -13,4 +13,4 @@ concurrency:
 
 jobs:
   run-rust-ci-workflow:
-    uses: brunolmarques/gha-reusable-workflows/.github.workflows/rust-ci.yaml@v1.0
+    uses: brunolmarques/gha-reusable-workflows/.github/workflows/rust-ci.yaml@v1.0
