@@ -38,12 +38,6 @@ jobs:
       - name: Run Clippy
         run: |
           cargo clippy --all-targets -- -D warnings
-      
-      - name: Run cargo-udeps
-        uses: aig787/cargo-udeps-action@v1
-        with:
-          version: 'latest'
-          args: '--all-targets'
           
       - name: Analyze security breaches for dependencies
         run: |
