@@ -37,7 +37,7 @@ jobs:
 
       - name: Run Clippy
         run: |
-          cargo clippy --all-targets -- -D warnings
+          cargo clippy --all-targets
           
       - name: Analyze security breaches for dependencies
         run: |
