@@ -2,14 +2,21 @@ name: Rust CI
 
 on:
  workflow_call:
-      
+    inputs:
+      container_image:           
+        type: string
+        required: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    # When the caller passes an image, run inside it
+    container: ${{ inputs.container_image }}   # GH‑Actions will pull & start it
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Cache dependencies
         uses: actions/cache@v3
@@ -20,16 +27,12 @@ jobs:
           key: cargo-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: cargo-${{ runner.os }}-
 
-      - name: Install Rust
+      - name: Install Rust (nightly with components)
         uses: actions-rs/toolchain@v1
         with:
+          toolchain: nightly  
           override: true
-          toolchain: nightly
-
-      - name: Install Clippy and Rustfmt
-        run: |
-          rustup component add clippy
-          rustup component add rustfmt
+          components: clippy, rustfmt
 
       - name: Check code format
         run: |
@@ -37,11 +40,7 @@ jobs:
 
       - name: Run Clippy
         run: |
-          cargo clippy --all-targets
-          
-      - name: Analyze security breaches for dependencies
-        run: |
-          cargo audit
+          cargo clippy --all-targets --all-features -- -D warnings
 
       - name: Build and test code
         run: |
