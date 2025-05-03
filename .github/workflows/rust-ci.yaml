@@ -20,16 +20,12 @@ jobs:
           key: cargo-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: cargo-${{ runner.os }}-
 
-      - name: Install Rust
+      - name: Install Rust (nightly with components)
         uses: actions-rs/toolchain@v1
         with:
+          toolchain: nightly  
           override: true
-          toolchain: nightly
-
-      - name: Install Clippy and Rustfmt
-        run: |
-          rustup component add clippy
-          rustup component add rustfmt
+          components: clippy, rustfmt
 
       - name: Check code format
         run: |
