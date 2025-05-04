@@ -2,10 +2,17 @@ name: Rust CI
 
 on:
  workflow_call:
-      
+    inputs:
+      container_image:           
+        type: string
+        required: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    # When the caller passes an image, run inside it
+    container: ${{ inputs.container_image }}   # GH‑Actions will pull & start it
 
     steps:
       - name: Checkout code
