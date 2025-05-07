@@ -1,0 +1,19 @@
+name: Build & push devcontainer
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write      # << required to push to GHCR
+    steps:
+      - uses: actions/checkout@v4
+
+      # Build the image from .devcontainer/ and push to GHCR
+      - uses: devcontainers/ci@v0.3
+        with:
+          imageName: ghcr.io/${{ github.repository }}-devcontainer:latest
+          push: always         # cache future runs / Codespaces
