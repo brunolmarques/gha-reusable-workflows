@@ -15,5 +15,6 @@ jobs:
       # Build the image from .devcontainer/ and push to GHCR
       - uses: devcontainers/ci@v0.3
         with:
-          imageName: ghcr.io/${{ github.repository }}-devcontainer:latest
+          imageName: ghcr.io/${{ github.repository }}-devcontainer
+          tags: latest
           push: always         # cache future runs / Codespaces
