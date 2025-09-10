@@ -1,15 +1,50 @@
 name: Rust CI
 
 on:
- workflow_call:
+  workflow_call:
     inputs:
-      container_image:           
+      container_image:
         type: string
+        required: false
+      run_fmt:
+        description: "Run cargo fmt"
+        type: boolean
+        default: true
+        required: false
+      run_clippy:
+        description: "Run cargo clippy"
+        type: boolean
+        default: true
+        required: false
+      run_tests:
+        description: "Run cargo test"
+        type: boolean
+        default: true
+        required: false
+      run_coverage:
+        description: "Run coverage with cargo-llvm-cov"
+        type: boolean
+        default: false
+        required: false
+      upload_coverage_on_release:
+        description: "Upload coverage artifact when is_release=true"
+        type: boolean
+        default: true
+        required: false
+      min_coverage_percent:
+        description: "Minimum line coverage percent required to pass (0-100)"
+        type: number
+        default: 0
         required: false
 
 jobs:
+  version:
+    name: Detect version/release
+    uses: ./.github/workflows/version-release.yaml
+
   build:
     runs-on: ubuntu-latest
+    needs: version
 
     # When the caller passes an image, run inside it
     container: ${{ inputs.container_image }}   # GH‑Actions will pull & start it
@@ -30,19 +65,43 @@ jobs:
       - name: Install Rust (nightly with components)
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly  
+          toolchain: nightly
           override: true
-          components: clippy, rustfmt
+          components: clippy, rustfmt, llvm-tools-preview
 
       - name: Check code format
+        if: ${{ inputs.run_fmt }}
         run: |
           cargo fmt --all -- --check
 
       - name: Run Clippy
+        if: ${{ inputs.run_clippy }}
         run: |
           cargo clippy --all-targets --all-features -- -D warnings
 
       - name: Build and test code
+        if: ${{ inputs.run_tests }}
         run: |
           cargo build --verbose
           cargo test --verbose
+
+      - name: Install cargo-llvm-cov
+        if: ${{ inputs.run_coverage }}
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+
+      - name: Run coverage (cargo-llvm-cov)
+        if: ${{ inputs.run_coverage }}
+        run: |
+          set -euo pipefail
+          cargo llvm-cov --workspace --lcov --output-path lcov.info \
+            --fail-under-lines ${{ inputs.min_coverage_percent }}
+
+      - name: Upload coverage artifact (on release)
+        if: ${{ inputs.run_coverage && inputs.upload_coverage_on_release && needs.version.outputs.is_release == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ needs.version.outputs.version_name }}
+          path: lcov.info
+          if-no-files-found: error

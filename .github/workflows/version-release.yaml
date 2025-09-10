@@ -1,0 +1,54 @@
+name: Version and Release Detector
+
+on:
+  workflow_call:
+    outputs:
+      is_release:
+        description: "True if this run corresponds to a release tag 'v*' on main"
+        value: ${{ jobs.detect-version.outputs.is_release }}
+      version_name:
+        description: "Version name: tag (for releases) or SNAPSHOT-{short_sha}"
+        value: ${{ jobs.detect-version.outputs.version_name }}
+
+permissions:
+  contents: read
+
+jobs:
+  detect-version:
+    runs-on: ubuntu-latest
+    outputs:
+      is_release: ${{ steps.compute.outputs.is_release }}
+      version_name: ${{ steps.compute.outputs.version_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # need full history and tags
+
+      - name: Compute release and version name
+        id: compute
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          event_name="${{ github.event_name }}"
+          ref="${{ github.ref }}"              
+          ref_name="${{ github.ref_name }}"    
+          sha="${{ github.sha }}"
+          short_sha=$(echo "$sha" | cut -c1-7)
+
+          is_release=false
+          version_name="SNAPSHOT-$short_sha"
+
+          # Determine if this is a push of a version tag starting with 'v'
+          if [[ "$event_name" == "push" && "$ref" == refs/tags/v* ]]; then
+            # Ensure the tag's commit is contained in the main branch
+            git fetch origin main --depth=1 || true
+            if git merge-base --is-ancestor "$sha" "origin/main"; then
+              is_release=true
+              version_name="$ref_name"
+            fi
+          fi
+
+          echo "is_release=$is_release" >> "$GITHUB_OUTPUT"
+          echo "version_name=$version_name" >> "$GITHUB_OUTPUT"
